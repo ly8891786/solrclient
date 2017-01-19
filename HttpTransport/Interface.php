@@ -36,54 +36,59 @@
  * @author Timo Schmidt <timo.schmidt@aoemedia.de>, Donovan Jimenez <djimenez@conduit-it.com>
  */
 
+// require Apache_Solr_HttpTransport_Response
+require_once(dirname(__FILE__) . '/Response.php');
+
 /**
- * Convenience class that implements the transport implementation. Can be extended by
- * real implementations to do some of the common book keeping
+ * Interface that all Transport (HTTP Requester) implementations must implement. These
+ * Implementations can then be plugged into the Service instance in order to user their
+ * the desired method for making HTTP requests
  */
-abstract class Apache_Solr_HttpTransport_Abstract implements Apache_Solr_HttpTransport_Interface
-{	
+interface Apache_Solr_HttpTransport_Interface
+{
 	/**
-	 * Our default timeout value for requests that don't specify a timeout
-	 *
-	 * @var float
-	 */
-	private $_defaultTimeout = false;
-		
-	/**
-	 * Get the current default timeout setting (initially the default_socket_timeout ini setting)
-	 * in seconds
+	 * Get the current default timeout for all HTTP requests
 	 *
 	 * @return float
 	 */
-	public function getDefaultTimeout()
-	{
-		// lazy load the default timeout from the ini settings
-		if ($this->_defaultTimeout === false)
-		{
-			$this->_defaultTimeout = (int) ini_get('default_socket_timeout');
-
-			// double check we didn't get 0 for a timeout
-			if ($this->_defaultTimeout <= 0)
-			{
-				$this->_defaultTimeout = 60;
-			}
-		}
-		
-		return $this->_defaultTimeout;
-	}
+	public function getDefaultTimeout();
 	
 	/**
 	 * Set the current default timeout for all HTTP requests
 	 *
 	 * @param float $timeout
 	 */
-	public function setDefaultTimeout($timeout)
-	{
-		$timeout = (float) $timeout;
+	public function setDefaultTimeout($timeout);
 		
-		if ($timeout >= 0)
-		{
-			$this->_defaultTimeout = $timeout;
-		}
-	}	
+	/**
+	 * Perform a GET HTTP operation with an optional timeout and return the response
+	 * contents, use getLastResponseHeaders to retrieve HTTP headers
+	 *
+	 * @param string $url
+	 * @param float $timeout
+	 * @return Apache_Solr_HttpTransport_Response HTTP response
+	 */
+	public function performGetRequest($url, $timeout = false);
+	
+	/**
+	 * Perform a HEAD HTTP operation with an optional timeout and return the response
+	 * headers - NOTE: head requests have no response body
+	 *
+	 * @param string $url
+	 * @param float $timeout
+	 * @return Apache_Solr_HttpTransport_Response HTTP response
+	 */
+	public function performHeadRequest($url, $timeout = false);
+	
+	/**
+	 * Perform a POST HTTP operation with an optional timeout and return the response
+	 * contents, use getLastResponseHeaders to retrieve HTTP headers
+	 *
+	 * @param string $url
+	 * @param string $rawPost
+	 * @param string $contentType
+	 * @param float $timeout
+	 * @return Apache_Solr_HttpTransport_Response HTTP response
+	 */
+	public function performPostRequest($url, $rawPost, $contentType, $timeout = false);
 }
